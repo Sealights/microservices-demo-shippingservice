@@ -1,17 +1,17 @@
 ﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: b-shippingservice
+  name: sl-boutique-shippingservice
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: b-shippingservice
+      app.kubernetes.io/name: sl-boutique-shippingservice
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app.kubernetes.io/name: b-shippingservice
+        app.kubernetes.io/name: sl-boutique-shippingservice
     spec:
       containers:
         - image: 159616352881.dkr.ecr.eu-west-1.amazonaws.com/microservices-demo-shippingservice:latest
