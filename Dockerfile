@@ -11,21 +11,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-FROM golang:1.17.7-alpine as builder
-RUN apk add --no-cache ca-certificates git
-RUN apk add build-base
+FROM sealights/golang-builder as builder
 WORKDIR /src
 
 # restore dependencies
 COPY go.mod go.sum ./
 RUN go mod download
+
+ARG RM_DEV_SL_TOKEN=local
+ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
+
 COPY . .
 
 # Skaffold passes in debug-oriented compiler flags
 ARG SKAFFOLD_GO_GCFLAGS
-RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/shippingservice .
 
+RUN wget https://agents.sealights.co/slcli/latest/slcli-linux-amd64.tar.gz \
+    && tar -xzvf slcli-linux-amd64.tar.gz \
+    && chmod +x ./slcli
+RUN wget https://agents.sealights.co/slgoagent/latest/slgoagent-linux-amd64.tar.gz \
+    && tar -xzvf slgoagent-linux-amd64.tar.gz \
+    && chmod +x ./build-scanner
+	
+RUN ./slcli config init --lang go --token $RM_DEV_SL_TOKEN
+RUN BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master"
+RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./build-scanner --workspacepath ./ --scm git --scmProvider github
+RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/shippingservice .
+RUN go test ./... -v	
+	
 FROM alpine as release
 RUN apk add --no-cache ca-certificates
 RUN GRPC_HEALTH_PROBE_VERSION=v0.4.7 && \
