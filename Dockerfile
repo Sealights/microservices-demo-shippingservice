@@ -31,11 +31,11 @@ RUN wget https://agents.sealights.co/slcli/latest/slcli-linux-amd64.tar.gz \
     && chmod +x ./slcli
 RUN wget https://agents.sealights.co/slgoagent/latest/slgoagent-linux-amd64.tar.gz \
     && tar -xzvf slgoagent-linux-amd64.tar.gz \
-    && chmod +x ./build-scanner
+    && chmod +x ./slgoagent
 	
 RUN ./slcli config init --lang go --token $RM_DEV_SL_TOKEN
 RUN BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master"
-RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./build-scanner --workspacepath ./ --scm git --scmProvider github
+RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./slgoagent --workspacepath ./ --scm git --scmProvider github
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/shippingservice .
 RUN go test ./... -v	
 	
