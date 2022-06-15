@@ -21,6 +21,7 @@ ARG RM_DEV_SL_TOKEN=local
 ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
 ENV SEALIGHTS_LOG_LEVEL=info
 ENV SEALIGHTS_LAB_ID="integ_master_813e_SLBoutique"
+ENV SEALIGHTS_TEST_STAGE="Unit Tests"
 COPY . .
 
 # Skaffold passes in debug-oriented compiler flags
