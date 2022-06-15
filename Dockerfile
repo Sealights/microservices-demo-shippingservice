@@ -17,10 +17,10 @@ WORKDIR /src
 # restore dependencies
 COPY go.mod go.sum ./
 RUN go mod download
-
 ARG RM_DEV_SL_TOKEN=local
 ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
-
+ENV SEALIGHTS_LOG_LEVEL=info
+ENV SEALIGHTS_LAB_ID="integ_master_813e_SLBoutique"
 COPY . .
 
 # Skaffold passes in debug-oriented compiler flags
@@ -32,13 +32,13 @@ RUN wget https://agents.sealights.co/slcli/latest/slcli-linux-amd64.tar.gz \
 RUN wget https://agents.sealights.co/slgoagent/latest/slgoagent-linux-amd64.tar.gz \
     && tar -xzvf slgoagent-linux-amd64.tar.gz \
     && chmod +x ./slgoagent
-	
+
 RUN ./slcli config init --lang go --token $RM_DEV_SL_TOKEN
 RUN BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master"
 RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./slgoagent --workspacepath ./ --scm git --scmProvider github
+RUN go test -v ./...
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/shippingservice .
-RUN go test ./... -v	
-	
+
 FROM alpine as release
 RUN apk add --no-cache ca-certificates
 RUN GRPC_HEALTH_PROBE_VERSION=v0.4.7 && \
@@ -52,6 +52,8 @@ ENV APP_PORT=50051
 # Default behavior - a failure prints a stack trace for the current goroutine.
 # See https://golang.org/pkg/runtime/
 ENV GOTRACEBACK=single
+ARG RM_DEV_SL_TOKEN=local
+ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
 
 EXPOSE 50051
 ENTRYPOINT ["/src/shippingservice"]
