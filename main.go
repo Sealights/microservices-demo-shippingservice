@@ -214,5 +214,5 @@ func decodeAndExtractServerUrl(token string, port string) (string, error) {
 	host := strings.Trim(urlValue, "https://")
 	host = strings.Trim(host, "/api")
 
-	return fmt.Sprintf("ingest.%s:%s", host, "443"), nil
+	return fmt.Sprintf("ingest.%s:%s", host, port), nil
 }
