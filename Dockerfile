@@ -28,6 +28,8 @@ ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
 ENV SEALIGHTS_LOG_LEVEL=info
 ENV SEALIGHTS_LAB_ID="integ_master_813e_SLBoutique"
 ENV SEALIGHTS_TEST_STAGE="Unit Tests"
+ENV OTEL_AGENT_COLLECTOR_PROTOCOL = "grpc"
+
 ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
 ENV IS_PR ${IS_PR}
 ENV TARGET_BRANCH ${TARGET_BRANCH}
@@ -61,8 +63,8 @@ RUN if [[ $IS_PR -eq 0 ]]; then \
     BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master" ; \
 else \ 
     echo "Pull request"; \
-    ./slcli prConfig create-bsid --app "shippingservice"  --targetBranch "${TARGET_BRANCH}" \
-        --latestCommit "${LATEST_COMMIT}" --pullRequestNumber "${PR_NUMBER}" --repositoryUrl "${TARGET_REPO_URL}"; \
+    ./slcli config create-pr-bsid --app "shippingservice"  --branch REMOVE-THIS --build REMOVE-YES --target-branch "${TARGET_BRANCH}" \
+        --latest-commit "${LATEST_COMMIT}" --pull-request-number "${PR_NUMBER}" --repository-url "${TARGET_REPO_URL}"; \
 fi
 
 RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./slgoagent --workspacepath ./ --scm git --scmProvider github
