@@ -18,11 +18,31 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 ARG RM_DEV_SL_TOKEN=local
+ARG IS_PR=""
+ARG TARGET_BRANCH=""
+ARG LATEST_COMMIT=""
+ARG PR_NUMBER=""
+ARG TARGET_REPO_URL=""
+
 ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
 ENV SEALIGHTS_LOG_LEVEL=info
 ENV SEALIGHTS_LAB_ID="integ_master_813e_SLBoutique"
 ENV SEALIGHTS_TEST_STAGE="Unit Tests"
 ENV OTEL_AGENT_COLLECTOR_PROTOCOL = "grpc"
+
+ENV RM_DEV_SL_TOKEN ${RM_DEV_SL_TOKEN}
+ENV IS_PR ${IS_PR}
+ENV TARGET_BRANCH ${TARGET_BRANCH}
+ENV LATEST_COMMIT ${LATEST_COMMIT}
+ENV PR_NUMBER ${PR_NUMBER}
+ENV TARGET_REPO_URL ${TARGET_REPO_URL}
+
+RUN echo "========================================================="
+RUN echo "targetBranch: ${TARGET_BRANCH}"
+RUN echo "latestCommit: ${LATEST_COMMIT}"
+RUN echo "pullRequestNumber ${PR_NUMBER}"
+RUN echo "repositoryUrl ${TARGET_REPO_URL}"
+RUN echo "========================================================="
 
 COPY . .
 
@@ -37,7 +57,16 @@ RUN wget https://agents.sealights.co/slgoagent/latest/slgoagent-linux-amd64.tar.
     && chmod +x ./slgoagent
 
 RUN ./slcli config init --lang go --token $RM_DEV_SL_TOKEN
-RUN BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master"
+
+RUN if [[ $IS_PR -eq 0 ]]; then \
+    echo "Check-in to repo"; \
+    BUILD_NAME=$(date +%F_%T) && ./slcli config create-bsid --app "shippingservice" --build "$BUILD_NAME" --branch "master" ; \
+else \ 
+    echo "Pull request"; \
+    ./slcli config create-pr-bsid --app "shippingservice"  --branch REMOVE-THIS --build REMOVE-YES --target-branch "${TARGET_BRANCH}" \
+        --latest-commit "${LATEST_COMMIT}" --pull-request-number "${PR_NUMBER}" --repository-url "${TARGET_REPO_URL}"; \
+fi
+
 RUN ./slcli scan  --bsid buildSessionId.txt --path-to-scanner ./slgoagent --workspacepath ./ --scm git --scmProvider github
 RUN go test -v ./...
 RUN go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /go/bin/shippingservice .
