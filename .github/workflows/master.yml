@@ -146,4 +146,4 @@ jobs:
              export GITHUB_TOKEN=
              export GH_TOKEN=
              gh auth login --with-token < token.txt
-             gh pr create -B master --title="$INITIATOR service - ${{ steps.tag_version.outputs.new_tag }}" --body="Auto-created PR after $INITIATOR service (${{ steps.tag_version.outputs.new_tag }}) source changed"          
+             gh pr create -B master --title="$INITIATOR service - ${{ steps.tag_version.outputs.new_tag }}" --body="Auto-created PR after $INITIATOR service (${{ steps.tag_version.outputs.new_tag }}) source changed" -l "automerge"      
