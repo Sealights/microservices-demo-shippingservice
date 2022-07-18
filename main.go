@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -40,7 +41,8 @@ import (
 )
 
 const (
-	defaultPort = "50051"
+	defaultPort     = "50051"
+	defaultHttpPort = "50052"
 )
 
 var log *logrus.Logger
@@ -136,8 +138,34 @@ func main() {
 
 	// Register reflection service on gRPC server.
 	reflection.Register(srv)
-	if err := srv.Serve(lis); err != nil {
+
+	go RunGrpcServer(srv, lis)
+	RunHttpServer()
+}
+
+func RunGrpcServer(srv *grpc.Server, lis net.Listener) {
+	err := srv.Serve(lis)
+	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func RunHttpServer() {
+	httpPort := defaultHttpPort
+
+	if value, ok := os.LookupEnv("HTTP_PORT"); ok {
+		httpPort = value
+	}
+
+	httpPort = fmt.Sprintf(":%s", httpPort)
+	http.HandleFunc("/getquote", GetQuote)
+	http.HandleFunc("/shiporder", ShipOrder)
+
+	log.Infof("Shipping Service Http starting on port %s", httpPort)
+
+	err := http.ListenAndServe(httpPort, nil)
+	if err != nil {
+		log.Fatalf("failed to http serve: %v", err)
 	}
 }
 
