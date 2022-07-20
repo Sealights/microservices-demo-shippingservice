@@ -163,7 +163,7 @@ func RunHttpServer() {
 
 	log.Infof("Shipping Service Http starting on port %s", httpPort)
 
-	err := http.ListenAndServe(fmt.Sprintf("sl-boutique-shippingservice:%s", httpPort), nil)
+	err := http.ListenAndServe(fmt.Sprintf("sl-boutique-shippingservice%s", httpPort), nil)
 	if err != nil {
 		log.Fatalf("failed to http serve: %v", err)
 	}
@@ -210,6 +210,7 @@ func (s *server) GetQuote(ctx context.Context, in *pb.GetQuoteRequest) (*pb.GetQ
 // ShipOrder mocks that the requested items will be shipped.
 // It supplies a tracking ID for notional lookup of shipment delivery status.
 func (s *server) ShipOrder(ctx context.Context, in *pb.ShipOrderRequest) (*pb.ShipOrderResponse, error) {
+
 	log.Info("[ShipOrder] received request")
 	defer log.Info("[ShipOrder] completed request")
 	// 1. Create a Tracking ID
