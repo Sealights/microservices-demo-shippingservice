@@ -163,7 +163,7 @@ func RunHttpServer() {
 
 	log.Infof("Shipping Service Http starting on port %s", httpPort)
 
-	err := http.ListenAndServe(httpPort, nil)
+	err := http.ListenAndServe(fmt.Sprintf("sl-boutique-shippingservice:%s", httpPort), nil)
 	if err != nil {
 		log.Fatalf("failed to http serve: %v", err)
 	}
