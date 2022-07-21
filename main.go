@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"net"
 	"net/http"
 	"os"
@@ -158,10 +159,11 @@ func RunHttpServer() {
 	}
 
 	httpPort = fmt.Sprintf(":%s", httpPort)
-	http.HandleFunc("/getquote", GetQuote)
-	http.HandleFunc("/shiporder", ShipOrder)
 
 	log.Infof("Shipping Service Http starting on port %s", httpPort)
+
+	http.Handle("/getquote", otelhttp.NewHandler(http.HandlerFunc(GetQuote), "GetQuote"))
+	http.Handle("/shiporder", otelhttp.NewHandler(http.HandlerFunc(ShipOrder), "ShipOrder"))
 
 	err := http.ListenAndServe(fmt.Sprintf("%s", httpPort), nil)
 	if err != nil {
